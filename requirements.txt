@@ -1,0 +1,10 @@
+opencv-python
+tqdm
+easygui
+fastapi
+requests
+pandas
+SQLAlchemy
+pyodbc
+uvicorn
+matplotlib
