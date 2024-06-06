@@ -11,6 +11,7 @@ import uvicorn
 app = FastAPI()
 db_operation = DataBaseOperation()
 
+cap = cv2.VideoCapture(0)
 
 @app.post("/registration/")
 
@@ -27,19 +28,12 @@ async def person_registration(name: str = Form(...),
     }
 
     db_operation._person_registration(user_data, image)
-
+    
+# def additional_function_for_person_matching(image):
     
 
-
-
-
-
-
-# cap = cv2.VideoCapture(RTSP_LINKS[0])
-# live_feed(cap)
-
-
-
+# def person_attendance():
+    
 
 if __name__ == "__main__":
     # send_request()
@@ -49,3 +43,4 @@ if __name__ == "__main__":
     # execute_query(connection)
     # print(engine)
     uvicorn.run(app, host="127.0.0.1", port=8000)
+    print('hello')

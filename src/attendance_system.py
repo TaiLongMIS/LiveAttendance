@@ -2,6 +2,7 @@ import cv2
 import requests
 from sqlalchemy import URL, create_engine, text, insert, Table, DateTime
 from datetime import datetime
+from fastapi import HTTPException
 from src.config import *
 
 
@@ -44,8 +45,24 @@ class DataBaseOperation():
         else:
             return {"message": "Registration unsucessful", "status_code": 500}
 
-    def _person_match(self):
-        pass
+    def _attendance_update(self, image):
+        
+        raise NotImplementedError('Pore korbo')
+    
+        # try:
+            # files = {}
+            # files = {"image": (image.filename, image.file, image.content_type)}
+            # response = requests.post(FR_MATCH_API, files=files)
+            # content = response.content.decode("ascii")
+            # 
+            # name = content["name"]
+            # staff_id = content["ID"]
+            # department = content["Department"]
+            # 
+        # except Exception as e:
+            # print(str(e))
+            # raise HTTPException(status_code=500, detail=str(e))
+        # pass
 
 
 def send_match_request(image):
@@ -55,6 +72,7 @@ def send_match_request(image):
     port = 6969
     response = requests.post(f'http://192.168.101.230:{port}/api/v1/match', files=files)
     content = response.content.decode("ascii")
+    
     if isinstance(content, dict):
         id = content["ID"]
         name = content["NAME"]

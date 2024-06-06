@@ -4,7 +4,7 @@ from tqdm import tqdm
 from glob import glob
 import os
 import copy
-import easygui
+# import easygui
 # from deepface import DeepFace
 from datetime import datetime
 import requests
