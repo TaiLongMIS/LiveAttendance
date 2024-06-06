@@ -1,6 +1,6 @@
 import cv2
 from src.config import *
-import time
+import time, requests
 from typing import Union
 cap = cv2.VideoCapture(0)
 
@@ -15,6 +15,21 @@ def detect_face(image):
 def dummy_function(frame):
     print("Yes I'm working. \n")
     return frame
+
+def update_attendance(frame):
+    files = {}
+    _, image = cv2.imencode('.png', frame)
+    image_bytes = image.tobytes()
+    files = {"image": ('frame.png' ,image_bytes, 'image/png')}
+    response = requests.post(FR_MATCH_API, files=files)
+    print(response.content.decode("ascii"))
+    
+    #######################################
+    # Update database for attendance record
+    #######################################
+    
+    raise NotImplementedError('The rest of this is to be done by Himel bhai.')
+
 
 def process_frame(cap = cap,
                   rtsp_url : Union[str, int] = None, 
@@ -44,4 +59,4 @@ def process_frame(cap = cap,
     
 if __name__ == "__main__":
     # cap = cv2.VideoCapture(0)
-    process_frame(rtsp_url=0)
+    process_frame(rtsp_url=0, additional_function=update_attendance)
