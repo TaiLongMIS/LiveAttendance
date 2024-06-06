@@ -1,6 +1,7 @@
 import cv2
 import requests
 from sqlalchemy import URL, create_engine, text, insert, Table, DateTime
+from fastapi import HTTPException
 from datetime import datetime
 from src.config import *
 
@@ -19,13 +20,24 @@ class DataBaseOperation():
         department = user_data["department"]
         designation = user_data["designation"]
 
-        query = text(f"INSERT INTO [User](StaffID, Name, Department, Designation)\
-            VALUES ('{staff_id}', '{name}', '{department}', '{designation}')")
+        if_exists_query = text(f"SELECT* FROM Attendance.dbo.[User] as u\
+                                    WHERE u.StaffID = {staff_id}")
         
-        self.connection.execute(query)
-        self.connection.commit()
+        result = self.connection.execute(if_exists_query)
 
-        # Preparing data for face recognition module
+        if result.first() is None:
+            try:
+                query = text(f"INSERT INTO [User](StaffID, Name, Department, Designation)\
+                    VALUES ('{staff_id}', '{name}', '{department}', '{designation}')")
+                self.connection.execute(query)
+                self.connection.commit()
+            except Exception as e:
+                raise HTTPException(status_code=500, detail="Internal server error: Unable to write to the database")
+
+        else:
+            raise HTTPException(status_code=409, detail="User already registered against this staff ID")
+
+        ## Preparing data for face recognition module
 
         data = {
             "id": staff_id,

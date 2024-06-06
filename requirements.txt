@@ -1,6 +1,6 @@
 opencv-python
 tqdm
-easygui
+# easygui
 fastapi
 requests
 pandas
