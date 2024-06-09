@@ -1,6 +1,5 @@
 from src.vision_utils import live_feed
-from src.attendance_system import DataBaseOperation
-from src.schemas import UserProfile
+from src.db_utils import DataBaseOperation
 from src.config import *
 import cv2
 from fastapi import FastAPI, File, UploadFile, Form
@@ -9,7 +8,9 @@ import uvicorn
 
 
 app = FastAPI()
+
 db_operation = DataBaseOperation()
+
 
 
 @app.post("/registration/")
@@ -28,6 +29,7 @@ async def person_registration(name: str = Form(...),
 
     db_operation._person_registration(user_data, image)
 
+
     
 
 
@@ -35,7 +37,7 @@ async def person_registration(name: str = Form(...),
 
 
 
-# cap = cv2.VideoCapture(RTSP_LINKS[0])
+
 # live_feed(cap)
 
 
@@ -44,8 +46,10 @@ async def person_registration(name: str = Form(...),
 if __name__ == "__main__":
     # send_request()
     # create_directories()
-    # live_feed(cap, send_match_request)
-    # engine = db_connect()
-    # execute_query(connection)
+    
+    
+    
     # print(engine)
     uvicorn.run(app, host="127.0.0.1", port=8000)
+    # image = cv2.imread("4.png")
+    # db_operation.send_match_request(image)

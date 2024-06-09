@@ -169,11 +169,12 @@ def live_feed(cap, additional_func):
         t2 = datetime.now()
         elapsed_time += (t2 - t1).total_seconds()
         if int(elapsed_time) == count:
-            additional_func(frame)
+            return_message = additional_func(frame)
             print(f"Elapsed {int(elapsed_time)} seconds")
+            print(return_message)
+            print()
             count += 1
-    avg_time /= count
-    print(f"Elapsed average time: {avg_time}")
+    
     cv2.destroyAllWindows()
     cap.release()
 
