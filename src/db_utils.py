@@ -1,18 +1,23 @@
 import cv2
 import requests
-from sqlalchemy import URL, create_engine, text, insert, Table, DateTime
+from sqlalchemy import create_engine, text
 from fastapi import HTTPException
 from datetime import datetime, date
-import time
 from src.config import *
 
-
+face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
 
 class DataBaseOperation():
     def __init__(self):
         engine = create_engine(DB_CONNECTION_STRING)
         self.connection = engine.connect()
 
+    @staticmethod
+    def _detect_face(image):
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        faces = face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
+        return faces
+    
     def _person_registration(self, user_data, image):
         
         name = user_data["name"]
@@ -60,47 +65,53 @@ class DataBaseOperation():
 
 
     def _send_match_request(self, image):
+        faces = DataBaseOperation._detect_face(image)
+        if len(faces) == 0:
+            return "No face found"
         _, image = cv2.imencode(".png", image)
         image_bytes = image.tobytes()
         files = {"image": ("frame.png", image_bytes, "image/png")}
-        port = 6969
-        response = requests.post(f'http://192.168.101.230:{port}/api/v1/match', files=files)
-        if (response.ok):
-            content = eval(response.content.decode("ascii"))
-            print(f"Content: {content}")
-            print(f"type: {type(content)}")
-            if isinstance(content, dict):
-                staff_id = content["ID"]
-                current_date = date.today().strftime('%Y-%m-%d')
-                current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        # response = requests.post(f'{FR_MATCH_API}', files=files)
+        try:
+            response = requests.post(f'{FR_MULTI_MATCH_API}', files=files)
+            if (response.ok):
+                content = eval(response.content.decode("ascii"))
+                print(f"Content: {content}")
+                print(f"type: {type(content)}")
+                if isinstance(content, dict):
+                    staff_id = content["ID"]
+                    current_date = date.today().strftime('%Y-%m-%d')
+                    current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
-                query = text(f"""
-                        SELECT id FROM AttendanceReport
-                        WHERE StaffID = {staff_id} AND [Date] = '{current_date}'
-                    """)
-                result = self.connection.execute(query).fetchone()
-                print("Fetched the result")
-                if result:
-                    update_query = text(f"""
-                                        UPDATE Attendance.dbo.AttendanceReport
-                                        SET CheckOut = '{current_time}'
-                                        WHERE StaffID = {staff_id}
-                                """)
-                    self.connection.execute(update_query)
-                    self.connection.commit()
+                    query = text(f"""
+                            SELECT id FROM AttendanceReport
+                            WHERE StaffID = {staff_id} AND [Date] = '{current_date}'
+                        """)
+                    result = self.connection.execute(query).fetchone()
+                    print("Fetched the result")
+                    if result:
+                        update_query = text(f"""
+                                            UPDATE Attendance.dbo.AttendanceReport
+                                            SET CheckOut = '{current_time}'
+                                            WHERE StaffID = {staff_id}
+                                    """)
+                        self.connection.execute(update_query)
+                        self.connection.commit()
+                    else:
+                        insert_query = text(f"""
+                                            INSERT INTO Attendance.dbo.AttendanceReport (Date, CheckIn, CheckOut, StaffID)
+                                            VALUES ('{current_date}', '{current_time}', '{current_time}', {staff_id})
+                                    """)
+                        self.connection.execute(insert_query)
+                        self.connection.commit()
+                        
+                        return {"message": "Check-in and checkout time recorded", "staff_id": staff_id, "checkin": current_time, "checkout": current_time}
                 else:
-                    insert_query = text(f"""
-                                        INSERT INTO Attendance.dbo.AttendanceReport (Date, CheckIn, CheckOut, StaffID)
-                                        VALUES ('{current_date}', '{current_time}', '{current_time}', {staff_id})
-                                """)
-                    self.connection.execute(insert_query)
-                    self.connection.commit()
-                    
-                    return {"message": "Check-in and checkout time recorded", "staff_id": staff_id, "checkin": current_time, "checkout": current_time}
+                    pass
             else:
                 pass
-        else:
-            pass
+        except:
+            print(f"Invalid URL: {FR_MULTI_MATCH_API}")
 
 
 # class DBManager():

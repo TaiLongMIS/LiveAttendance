@@ -1,9 +1,8 @@
 from src.vision_utils import live_feed
 from src.db_utils import DataBaseOperation
 from src.config import *
-import cv2
 from fastapi import FastAPI, File, UploadFile, Form
-from typing import Optional, Annotated
+from typing import Annotated
 import uvicorn
 
 

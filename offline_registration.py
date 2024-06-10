@@ -2,7 +2,6 @@ import cv2
 from easygui import *
 from src.vision_utils import capture_single_frame
 from src.db_utils import DataBaseOperation
-from fastapi import UploadFile
 from starlette.datastructures import UploadFile as StarletteUploadFile
 import io
 

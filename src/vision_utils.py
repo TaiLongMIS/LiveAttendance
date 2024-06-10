@@ -1,13 +1,8 @@
 import cv2
-import matplotlib.pyplot as plt
-from tqdm import tqdm 
-from glob import glob
 import os
 import copy
 import easygui
-# from deepface import DeepFace
 from datetime import datetime
-import requests
 
 
 def capture_continuous_frames(save_dir, cam_url, init_count=0):
