@@ -3,6 +3,7 @@ import os
 import copy
 import easygui
 from datetime import datetime
+from src.db_utils import DataBaseOperation
 
 
 def capture_continuous_frames(save_dir, cam_url, init_count=0):
@@ -135,7 +136,7 @@ def capture_single_frame(save_dir: str = None, cam_url=0, num_of_capture: str="m
         payload["image_array"] = original_frame
     return payload
 
-def live_feed(cap, additional_func):
+def live_feed(cam_url):
     """
     Capture several continuous frames from a video feed through a camera
 
@@ -145,7 +146,8 @@ def live_feed(cap, additional_func):
         RTSP link of ip cam
     
     """
-    # cap = cv2.VideoCapture(cam_url)
+    cap = cv2.VideoCapture(cam_url)
+    db_operation = DataBaseOperation()
     elapsed_time = 0.
     count = 1
     while cap.isOpened():
@@ -164,10 +166,10 @@ def live_feed(cap, additional_func):
         t2 = datetime.now()
         elapsed_time += (t2 - t1).total_seconds()
         if int(elapsed_time) == count:
-            return_message = additional_func(frame)
-            print(f"Elapsed {int(elapsed_time)} seconds")
-            print(return_message)
-            print()
+            # return_message = additional_func(frame, lock)
+            return_message = db_operation._send_match_request(frame)
+            # print(f"Elapsed {int(elapsed_time)} seconds")
+            # print(return_message)
             count += 1
     
     cv2.destroyAllWindows()

@@ -26,14 +26,8 @@ async def person_registration(name: str = Form(...),
         "designation": designation,
     }
 
-    db_operation._person_registration(user_data, image)
-
-
-    
-
-
-
-
+    response = db_operation._person_registration(user_data, image)
+    return response
 
 
 
@@ -49,6 +43,6 @@ if __name__ == "__main__":
     
     
     # print(engine)
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8000)
     # image = cv2.imread("4.png")
     # db_operation.send_match_request(image)

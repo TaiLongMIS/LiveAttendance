@@ -69,30 +69,38 @@ class DataBaseOperation():
             staff_id = content["ID"]
             current_date = date.today().strftime('%Y-%m-%d')
             current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            try:
+                query = text(f"""
+                        SELECT id FROM AttendanceReport
+                        WHERE StaffID = {staff_id} AND [Date] = '{current_date}'
+                    """)
+                result = self.connection.execute(query).fetchone()
+            except:
+                print("Filtering from `User` table unsuccessfull")
 
-            query = text(f"""
-                    SELECT id FROM AttendanceReport
-                    WHERE StaffID = {staff_id} AND [Date] = '{current_date}'
-                """)
-            result = self.connection.execute(query).fetchone()
-            print("Fetched the result")
             if result:
-                update_query = text(f"""
-                                    UPDATE Attendance.dbo.AttendanceReport
-                                    SET CheckOut = '{current_time}'
-                                    WHERE StaffID = {staff_id}
-                            """)
-                self.connection.execute(update_query)
-                self.connection.commit()
+                try:
+                    update_query = text(f"""
+                                        UPDATE Attendance.dbo.AttendanceReport
+                                        SET CheckOut = '{current_time}'
+                                        WHERE StaffID = {staff_id} AND [DATE] = '{current_date}'
+                                """)
+                    self.connection.execute(update_query)
+                    self.connection.commit()
+                except:
+                    return "Attendance report couldn't be updated"
             else:
-                insert_query = text(f"""
-                                    INSERT INTO Attendance.dbo.AttendanceReport (Date, CheckIn, CheckOut, StaffID)
-                                    VALUES ('{current_date}', '{current_time}', '{current_time}', {staff_id})
-                            """)
-                self.connection.execute(insert_query)
-                self.connection.commit()
-                
-                return {"message": "Check-in and checkout time recorded", "staff_id": staff_id, "checkin": current_time, "checkout": current_time}
+                try:
+                    insert_query = text(f"""
+                                        INSERT INTO Attendance.dbo.AttendanceReport (Date, CheckIn, CheckOut, StaffID)
+                                        VALUES ('{current_date}', '{current_time}', '{current_time}', {staff_id})
+                                """)
+                    self.connection.execute(insert_query)
+                    self.connection.commit()
+                    
+                    return {"message": "Check-in and checkout time recorded", "staff_id": staff_id, "checkin": current_time, "checkout": current_time}
+                except:
+                    return "First check in report creation failed"
         else:
             pass
 
@@ -106,7 +114,7 @@ class DataBaseOperation():
 
         # response = requests.post(f'{FR_MATCH_API}', files=files)
         try:
-            response = requests.post(f'{FR_MULTI_MATCH_API}', files=files)
+            response = requests.post(f'{FR_MATCH_API}', files=files)
             if (response.ok):
                 contents = eval(response.content.decode("ascii"))
                 if isinstance(contents, list):
@@ -122,9 +130,3 @@ class DataBaseOperation():
             print(f"Invalid URL: {FR_MULTI_MATCH_API}")
 
 
-# class DBManager():
-#     db_operation = None
-
-#     @classmethod
-#     def load_engine(cls):
-#         cls.db_operation = DataBaseOperation()
