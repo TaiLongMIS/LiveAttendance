@@ -63,6 +63,38 @@ class DataBaseOperation():
         else:
             return {"message": "Registration unsucessful", "status_code": 500}
 
+    def _process_single_response(self, content):
+        if isinstance(content, dict):
+            print(content)
+            staff_id = content["ID"]
+            current_date = date.today().strftime('%Y-%m-%d')
+            current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+            query = text(f"""
+                    SELECT id FROM AttendanceReport
+                    WHERE StaffID = {staff_id} AND [Date] = '{current_date}'
+                """)
+            result = self.connection.execute(query).fetchone()
+            print("Fetched the result")
+            if result:
+                update_query = text(f"""
+                                    UPDATE Attendance.dbo.AttendanceReport
+                                    SET CheckOut = '{current_time}'
+                                    WHERE StaffID = {staff_id}
+                            """)
+                self.connection.execute(update_query)
+                self.connection.commit()
+            else:
+                insert_query = text(f"""
+                                    INSERT INTO Attendance.dbo.AttendanceReport (Date, CheckIn, CheckOut, StaffID)
+                                    VALUES ('{current_date}', '{current_time}', '{current_time}', {staff_id})
+                            """)
+                self.connection.execute(insert_query)
+                self.connection.commit()
+                
+                return {"message": "Check-in and checkout time recorded", "staff_id": staff_id, "checkin": current_time, "checkout": current_time}
+        else:
+            pass
 
     def _send_match_request(self, image):
         faces = DataBaseOperation._detect_face(image)
@@ -71,45 +103,21 @@ class DataBaseOperation():
         _, image = cv2.imencode(".png", image)
         image_bytes = image.tobytes()
         files = {"image": ("frame.png", image_bytes, "image/png")}
+
         # response = requests.post(f'{FR_MATCH_API}', files=files)
         try:
             response = requests.post(f'{FR_MULTI_MATCH_API}', files=files)
             if (response.ok):
-                content = eval(response.content.decode("ascii"))
-                print(f"Content: {content}")
-                print(f"type: {type(content)}")
-                if isinstance(content, dict):
-                    staff_id = content["ID"]
-                    current_date = date.today().strftime('%Y-%m-%d')
-                    current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-
-                    query = text(f"""
-                            SELECT id FROM AttendanceReport
-                            WHERE StaffID = {staff_id} AND [Date] = '{current_date}'
-                        """)
-                    result = self.connection.execute(query).fetchone()
-                    print("Fetched the result")
-                    if result:
-                        update_query = text(f"""
-                                            UPDATE Attendance.dbo.AttendanceReport
-                                            SET CheckOut = '{current_time}'
-                                            WHERE StaffID = {staff_id}
-                                    """)
-                        self.connection.execute(update_query)
-                        self.connection.commit()
-                    else:
-                        insert_query = text(f"""
-                                            INSERT INTO Attendance.dbo.AttendanceReport (Date, CheckIn, CheckOut, StaffID)
-                                            VALUES ('{current_date}', '{current_time}', '{current_time}', {staff_id})
-                                    """)
-                        self.connection.execute(insert_query)
-                        self.connection.commit()
-                        
-                        return {"message": "Check-in and checkout time recorded", "staff_id": staff_id, "checkin": current_time, "checkout": current_time}
+                contents = eval(response.content.decode("ascii"))
+                if isinstance(contents, list):
+                    for content in contents:
+                        self._process_single_response(content)
+                elif isinstance(contents, dict):
+                    self._process_single_response(contents)
                 else:
-                    pass
+                    print(f"matching response should be either `list` or `dict`") 
             else:
-                pass
+                print(f"Response: {response.content}")
         except:
             print(f"Invalid URL: {FR_MULTI_MATCH_API}")
 
