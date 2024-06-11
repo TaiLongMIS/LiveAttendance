@@ -155,7 +155,6 @@ def live_feed(cam_url):
         ret, frame = cap.read()
         if ret:
             try:
-                # frame = detect_faces(frame)
                 frame = cv2.resize(frame, (640, 480))
                 cv2.imshow("Live View", frame)
             except:
@@ -174,19 +173,3 @@ def live_feed(cam_url):
     
     cv2.destroyAllWindows()
     cap.release()
-
-
-
-# def detect_faces(original_image):
-#     image = copy.deepcopy(original_image)
-#     faces = DeepFace.extract_faces(image, detector_backend="ssd", enforce_detection=False)
-#     for face in faces:
-#         x, y, w, h = list(face["facial_area"].values())[:4]
-#         image = cv2.rectangle(image, (x, y), (x+w, y+h), (0 , 0 , 255) , 1)
-#     return image
-
-if __name__ == "__main__":
-    output_dir = "./team/himel/"
-    # capture_continuous_frames(save_dir=output_dir, cam_url=0, init_count=10)
-    im = capture_single_frame(save_dir="./fake", cam_url=0, num_of_capture="single", return_image=True)
-    # print(type(im))

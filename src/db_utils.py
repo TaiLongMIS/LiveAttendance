@@ -69,6 +69,19 @@ class DataBaseOperation():
             staff_id = content["ID"]
             current_date = date.today().strftime('%Y-%m-%d')
             current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+            try:
+                query = text(f"""
+                            SELECT * FROM [User]
+                            WHERE StaffID = {staff_id}
+
+                            """)
+                result = self.connection.execute(query).fetchone()
+                if result is None:
+                    return "Person is not registered"
+            except:
+                print("User information cannot be retrieved")
+
             try:
                 query = text(f"""
                         SELECT id FROM AttendanceReport
@@ -105,6 +118,7 @@ class DataBaseOperation():
             pass
 
     def _send_match_request(self, image):
+        match_result = None
         faces = DataBaseOperation._detect_face(image)
         if len(faces) == 0:
             return "No face found"
@@ -114,18 +128,21 @@ class DataBaseOperation():
 
         # response = requests.post(f'{FR_MATCH_API}', files=files)
         try:
-            response = requests.post(f'{FR_MATCH_API}', files=files)
+            response = requests.post(f'{FR_MULTI_MATCH_API}', files=files)
             if (response.ok):
                 contents = eval(response.content.decode("ascii"))
                 if isinstance(contents, list):
                     for content in contents:
-                        self._process_single_response(content)
+                        match_result = self._process_single_response(content)
                 elif isinstance(contents, dict):
-                    self._process_single_response(contents)
+                    match_result = self._process_single_response(contents)
                 else:
                     print(f"matching response should be either `list` or `dict`") 
+
+                # print(match_result)
             else:
                 print(f"Response: {response.content}")
+            
         except:
             print(f"Invalid URL: {FR_MULTI_MATCH_API}")
 
