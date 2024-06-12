@@ -37,12 +37,4 @@ async def person_registration(name: str = Form(...),
 
 
 if __name__ == "__main__":
-    # send_request()
-    # create_directories()
-    
-    
-    
-    # print(engine)
     uvicorn.run(app, host="0.0.0.0", port=8000)
-    # image = cv2.imread("4.png")
-    # db_operation.send_match_request(image)
