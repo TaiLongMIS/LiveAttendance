@@ -1,13 +1,9 @@
 import cv2
-import matplotlib.pyplot as plt
-from tqdm import tqdm 
-from glob import glob
 import os
 import copy
 import easygui
-# from deepface import DeepFace
 from datetime import datetime
-import requests
+from src.db_utils import DataBaseOperation
 
 
 def capture_continuous_frames(save_dir, cam_url, init_count=0):
@@ -140,7 +136,7 @@ def capture_single_frame(save_dir: str = None, cam_url=0, num_of_capture: str="m
         payload["image_array"] = original_frame
     return payload
 
-def live_feed(cap, additional_func):
+def live_feed(cam_url):
     """
     Capture several continuous frames from a video feed through a camera
 
@@ -150,7 +146,8 @@ def live_feed(cap, additional_func):
         RTSP link of ip cam
     
     """
-    # cap = cv2.VideoCapture(cam_url)
+    cap = cv2.VideoCapture(cam_url)
+    db_operation = DataBaseOperation()
     elapsed_time = 0.
     count = 1
     while cap.isOpened():
@@ -158,7 +155,6 @@ def live_feed(cap, additional_func):
         ret, frame = cap.read()
         if ret:
             try:
-                # frame = detect_faces(frame)
                 frame = cv2.resize(frame, (640, 480))
                 cv2.imshow("Live View", frame)
             except:
@@ -169,26 +165,11 @@ def live_feed(cap, additional_func):
         t2 = datetime.now()
         elapsed_time += (t2 - t1).total_seconds()
         if int(elapsed_time) == count:
-            additional_func(frame)
-            print(f"Elapsed {int(elapsed_time)} seconds")
+            # return_message = additional_func(frame, lock)
+            return_message = db_operation._send_match_request(frame)
+            # print(f"Elapsed {int(elapsed_time)} seconds")
+            # print(return_message)
             count += 1
-    avg_time /= count
-    print(f"Elapsed average time: {avg_time}")
+    
     cv2.destroyAllWindows()
     cap.release()
-
-
-
-# def detect_faces(original_image):
-#     image = copy.deepcopy(original_image)
-#     faces = DeepFace.extract_faces(image, detector_backend="ssd", enforce_detection=False)
-#     for face in faces:
-#         x, y, w, h = list(face["facial_area"].values())[:4]
-#         image = cv2.rectangle(image, (x, y), (x+w, y+h), (0 , 0 , 255) , 1)
-#     return image
-
-if __name__ == "__main__":
-    output_dir = "./team/himel/"
-    # capture_continuous_frames(save_dir=output_dir, cam_url=0, init_count=10)
-    im = capture_single_frame(save_dir="./fake", cam_url=0, num_of_capture="single", return_image=True)
-    # print(type(im))
