@@ -156,7 +156,7 @@ def live_feed(cam_url):
         if ret:
             try:
                 frame = cv2.resize(frame, (640, 480))
-                cv2.imshow("Live View", frame)
+                # cv2.imshow("Live View", frame)
             except:
                 break
 
