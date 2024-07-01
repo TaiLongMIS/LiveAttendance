@@ -1,6 +1,6 @@
 opencv-python
 tqdm
-tkinter
+# tkinter
 easygui
 fastapi
 requests
@@ -9,3 +9,4 @@ SQLAlchemy
 pyodbc
 uvicorn
 matplotlib
+# tk
