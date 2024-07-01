@@ -2,6 +2,7 @@ import cv2
 import requests
 from sqlalchemy import create_engine, text
 from fastapi import HTTPException
+import pandas as pd
 from datetime import datetime, date
 from src.config import *
 
@@ -145,5 +146,25 @@ class DataBaseOperation():
             
         except:
             print(f"Invalid URL: {FR_MULTI_MATCH_API}")
+        
+    def query_checkout(self, date: datetime, output_size: int)->list:
+        try:
+            query = text(f"""
+                            SELECT TOP {output_size} * FROM Attendance.dbo.AttendanceReport
+                            WHERE [Date] = '{date}'
+                            ORDER BY CheckOut DESC
+                        """)
+            results = self.connection.execute(query).fetchall()
+            
+            checkout_results = zip(*list(map(lambda x: x[-2:], results)))
+            checkout_time, ids = list(checkout_results)
+            df = pd.DataFrame(columns=["staff_id", "checkout_time"]) 
+            df["staff_id"] = ids
+            df["checkout_time"] = checkout_time
 
+            return df.to_dict(orient="records")
+        
+        except Exception as e:
+            return e
+        
 
