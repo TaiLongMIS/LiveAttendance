@@ -5,6 +5,9 @@ from fastapi import HTTPException
 import pandas as pd
 from datetime import datetime, date
 from src.config import *
+import json
+import io
+import os
 
 face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
 
@@ -30,7 +33,7 @@ class DataBaseOperation():
                                     WHERE u.StaffID = {staff_id}")
         
         result = self.connection.execute(if_exists_query)
-
+        
         if result.first() is None:
             try:
                 query = text(f"INSERT INTO [User](StaffID, Name, Department, Designation)\
@@ -59,7 +62,7 @@ class DataBaseOperation():
 
         response = requests.post(FR_REGISTRATION_API, data=data, files=files)
 
-        if response.status_code == 200:
+        if response.status_code == 200 or 201:
             return {"message": "Registration successful", "status_code": 201}
         else:
             return {"message": "Registration unsucessful", "status_code": 500}
@@ -99,8 +102,10 @@ class DataBaseOperation():
                                         SET CheckOut = '{current_time}'
                                         WHERE StaffID = {staff_id} AND [DATE] = '{current_date}'
                                 """)
+                    
                     self.connection.execute(update_query)
                     self.connection.commit()
+                    self.yamaha_data(staff_id)
                 except:
                     return "Attendance report couldn't be updated"
             else:
@@ -141,8 +146,10 @@ class DataBaseOperation():
                     print(f"matching response should be either `list` or `dict`") 
 
                 # print(match_result)
+                return match_result
             else:
                 print(f"Response: {response.content}")
+            
             
         except:
             print(f"Invalid URL: {FR_MULTI_MATCH_API}")
@@ -167,4 +174,23 @@ class DataBaseOperation():
         except Exception as e:
             return e
         
+    def yamaha_data(self, staff_id):
+        print(f"Yamaha data method")
+        params = {
+            "staff_id": staff_id,
+        }
+        fr_get_image = requests.get(FR_GET_IMAGE_API, params=params)
+        if fr_get_image.status_code == 200:
+            byte_image = io.BytesIO(fr_get_image.content)
+            data = {"customer_id": staff_id}
+            files = {"image_url": ("rendered_image.png", byte_image, "image/png")}
+            yamaha_response = requests.post(YAMAHA_API, files=files, data=data)
+            print(f"yamaha_response: {yamaha_response.content}")
+            print("########   ######")
+        else:
+            print(f"no image found in database for staff_id: {staff_id}")
+            
+
+
+
 

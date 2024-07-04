@@ -167,6 +167,9 @@ def live_feed(cam_url):
         if int(elapsed_time) == count:
             # return_message = additional_func(frame, lock)
             return_message = db_operation._send_match_request(frame)
+            print(f"return message: {return_message}")
+            
+
             # print(f"Elapsed {int(elapsed_time)} seconds")
             # print(return_message)
             count += 1
