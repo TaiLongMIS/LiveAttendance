@@ -5,6 +5,7 @@ from fastapi import HTTPException
 import pandas as pd
 from datetime import datetime, date
 from src.config import *
+import io
 
 face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
 
@@ -167,4 +168,23 @@ class DataBaseOperation():
         except Exception as e:
             return e
         
+
+    def yamaha_data(self, staff_id):
+        print(f"Yamaha data method")
+        params = {
+            "staff_id": staff_id,
+        }
+        fr_get_image = requests.get(FR_GET_IMAGE_API, params=params)
+        if fr_get_image.status_code == 200:
+            byte_image = io.BytesIO(fr_get_image.content)
+            data = {"customer_id": staff_id}
+            files = {"image_url": ("{staff_id}.png", byte_image, "image/png")}
+            yamaha_response = requests.post(YAMAHA_API, files=files, data=data)
+            print(f"yamaha_response: {yamaha_response.content}")
+            print("########   ######")
+        else:
+            print(f"no image found in database for staff_id: {staff_id}")
+            
+
+
 
