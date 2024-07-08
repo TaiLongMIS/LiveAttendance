@@ -36,38 +36,76 @@ class DataBaseOperation():
         
         if result.first() is None:
             try:
+                # Registration through face recognition module
+                data = {
+                    "id": staff_id,
+                    "name": name,
+                }
+
+                files = {}
+                if image is not None:
+                    files = {"image": (image.filename, image.file, image.content_type)}
+                else:
+                    raise Exception("No image found for the registration process")
+
+                ## Needs to check if attendance/user db is up/down
+                response = requests.post(FR_REGISTRATION_API, data=data, files=files)
+                response_data = json.loads(response.content)
+                
+                
+                if response.status_code == 200 or response.status_code == 201:
+                    pass
+                else:
+                    if response.status_code == 400:
+                        if response_data["error"] == "StaffIDAlreadyRegisteredException":
+                            image.file.seek(0)
+                            files = {"image": (image.filename, image.file.read(), image.content_type)}
+                            
+                            is_malicious_response = json.loads(requests.post(f'{FR_MATCH_API}', files=files).content)
+                            
+                            if is_malicious_response["ID"] != staff_id:
+                                return {"message": response_data["error"], "status_code": response.status_code}
+                        else:
+                            return {"message": response_data["error"], "status_code": response.status_code}
+                    else:
+                        return {"message": response_data["error"], "status_code": response.status_code}
+
                 query = text(f"INSERT INTO [User](StaffID, Name, Department, Designation)\
                     VALUES ('{staff_id}', '{name}', '{department}', '{designation}')")
                 self.connection.execute(query)
                 self.connection.commit()
+                return {"message": "Registration successful", "status_code": 201}
+            
             except Exception as e:
-                raise HTTPException(status_code=500, detail="Internal server error: Unable to write to the database")
+                print(e)
+                return {"message": "Internal server error: Unable to write to the database", "status_code": 500}
 
         else:
-            raise HTTPException(status_code=409, detail="User already registered against this staff ID")
+            return {"message": "User already registered against this staff ID", "status_code": 409}
+            
 
         ## Preparing data for face recognition module
         
 
-        data = {
-            "id": staff_id,
-            "name": name,
-        }
+        # data = {
+        #     "id": staff_id,
+        #     "name": name,
+        # }
 
-        files = {}
-        if image is not None:
-            files = {"image": (image.filename, image.file, image.content_type)}
-        else:
-            raise Exception("No image found for the registration process")
+        # files = {}
+        # if image is not None:
+        #     files = {"image": (image.filename, image.file, image.content_type)}
+        # else:
+        #     raise Exception("No image found for the registration process")
 
-        response = requests.post(FR_REGISTRATION_API, data=data, files=files)
-        response_data = json.loads(response.content)
+        # response = requests.post(FR_REGISTRATION_API, data=data, files=files)
+        # response_data = json.loads(response.content)
         
         
-        if response.status_code == 200 or response.status_code == 201:
-            return {"message": "Registration successful", "status_code": response.status_code}
-        else:
-            return {"message": response_data["error"], "status_code": response.status_code}
+        # if response.status_code == 200 or response.status_code == 201:
+        #     return {"message": "Registration successful", "status_code": response.status_code}
+        # else:
+        #     return {"message": response_data["error"], "status_code": response.status_code}
 
     def _process_single_response(self, content):
         if isinstance(content, dict):
