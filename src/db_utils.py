@@ -61,11 +61,13 @@ class DataBaseOperation():
             raise Exception("No image found for the registration process")
 
         response = requests.post(FR_REGISTRATION_API, data=data, files=files)
-
-        if response.status_code == 200 or 201:
-            return {"message": "Registration successful", "status_code": 201}
+        response_data = json.loads(response.content)
+        
+        
+        if response.status_code == 200 or response.status_code == 201:
+            return {"message": "Registration successful", "status_code": response.status_code}
         else:
-            return {"message": "Registration unsucessful", "status_code": 500}
+            return {"message": response_data["error"], "status_code": response.status_code}
 
     def _process_single_response(self, content):
         if isinstance(content, dict):
@@ -183,7 +185,7 @@ class DataBaseOperation():
         if fr_get_image.status_code == 200:
             byte_image = io.BytesIO(fr_get_image.content)
             data = {"customer_id": staff_id}
-            files = {"image_url": ("rendered_image.png", byte_image, "image/png")}
+            files = {"image_url": ("{staff_id}.png", byte_image, "image/png")}
             yamaha_response = requests.post(YAMAHA_API, files=files, data=data)
             print(f"yamaha_response: {yamaha_response.content}")
             print("########   ######")
