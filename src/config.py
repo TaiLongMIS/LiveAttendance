@@ -8,4 +8,6 @@ FR_MATCH_API = "http://192.168.101.230:6969/api/v1/match"
 FR_MULTI_MATCH_API = "http://192.168.101.230:6969/api/v1/multi-match"
 FR_GET_IMAGE_API = "http://192.168.101.230:6969/api/v1/get-image"
 YAMAHA_API = "http://116.68.205.78:7000/api/v1/customers/app_customer_visited_logs"
+YAMAHA_LIVE_IMAGE_API = "http://116.68.205.78:7000/api/v1/customers/app_customer_visited_logs"
+
 

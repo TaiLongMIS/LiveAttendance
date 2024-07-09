@@ -231,6 +231,7 @@ class DataBaseOperation():
             print(f"no image found in database for staff_id: {staff_id}")
             
 
-
+    def yamaha_live_data(self, staff_id):
+        pass
 
 
