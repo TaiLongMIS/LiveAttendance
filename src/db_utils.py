@@ -222,7 +222,8 @@ class DataBaseOperation():
         fr_get_image = requests.get(FR_GET_IMAGE_API, params=params)
         if fr_get_image.status_code == 200:
             byte_image = io.BytesIO(fr_get_image.content)
-            data = {"customer_id": staff_id}
+            live_image_url = FR_GET_IMAGE_API + f"?staff_id={staff_id}"
+            data = {"customer_id": staff_id, "live_image_url": live_image_url}
             files = {"image_url": ("{staff_id}.png", byte_image, "image/png")}
             yamaha_response = requests.post(YAMAHA_API, files=files, data=data)
             print(f"yamaha_response: {yamaha_response.content}")
