@@ -191,7 +191,8 @@ class DataBaseOperation():
                 print(f"Response: {response.content}")
             
             
-        except:
+        except Exception as e:
+            print(f"Exception: {e}")
             print(f"Invalid URL: {FR_MULTI_MATCH_API}")
         
     def query_checkout(self, date: datetime, output_size: int)->list:
