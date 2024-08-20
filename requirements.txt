@@ -9,3 +9,4 @@ SQLAlchemy
 pyodbc
 uvicorn
 matplotlib
+deepface
