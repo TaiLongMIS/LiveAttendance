@@ -10,3 +10,5 @@ pyodbc
 uvicorn
 matplotlib
 deepface
+tf-keras
+ultralytics

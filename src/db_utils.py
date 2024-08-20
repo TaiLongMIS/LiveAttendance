@@ -8,6 +8,7 @@ from src.config import *
 import json
 import io
 import os
+from deepface import DeepFace
 
 face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
 
@@ -15,11 +16,29 @@ class DataBaseOperation():
     def __init__(self):
         engine = create_engine(DB_CONNECTION_STRING)
         self.connection = engine.connect()
+        
+    def _connect_to_db(self):
+        engine = create_engine(DB_CONNECTION_STRING)
+        self.connection = engine.connect()
+        
+    def _ensure_connection(self):
+        try:
+            self.connection.execute("SELECT 1")
+        except:
+            print("Reconnecting to Database...")
+            self._connect_to_db()
 
     @staticmethod
-    def _detect_face(image):
-        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        faces = face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
+    def _detect_face(image, detector="yolov8"):
+        if detector == "haar":
+            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+            faces = face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
+            return len(faces)
+        elif detector == "yolov8":
+            faces = DeepFace.extract_faces(image, detector_backend=detector, enforce_detection=False)
+            return len(faces)
+            
+        
         return faces
     
     def _person_registration(self, user_data, image):
@@ -124,6 +143,7 @@ class DataBaseOperation():
                 if result is None:
                     return "Person is not registered"
             except:
+                self._ensure_connection()
                 print("User information cannot be retrieved")
 
             try:
@@ -133,6 +153,7 @@ class DataBaseOperation():
                     """)
                 result = self.connection.execute(query).fetchone()
             except:
+                self._ensure_connection()
                 print("Filtering from `User` table unsuccessfull")
 
             if result:
@@ -147,6 +168,7 @@ class DataBaseOperation():
                     self.connection.commit()
                     self.yamaha_data(staff_id)
                 except:
+                    self._ensure_connection()
                     return "Attendance report couldn't be updated"
             else:
                 try:
@@ -166,7 +188,8 @@ class DataBaseOperation():
     def _send_match_request(self, image):
         match_result = None
         faces = DataBaseOperation._detect_face(image)
-        if len(faces) == 0:
+        print(f"Number of faces: {faces}")
+        if faces == 0:
             return "No face found"
         _, image = cv2.imencode(".png", image)
         image_bytes = image.tobytes()
