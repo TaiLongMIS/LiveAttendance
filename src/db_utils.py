@@ -36,6 +36,9 @@ class DataBaseOperation():
             return len(faces)
         elif detector == "yolov8":
             faces = DeepFace.extract_faces(image, detector_backend=detector, enforce_detection=False)
+            if len(faces) == 1:
+                if faces[0]["confidence"] < 0.5:
+                    return 0
             return len(faces)
             
         

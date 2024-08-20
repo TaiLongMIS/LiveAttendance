@@ -1,6 +1,6 @@
 opencv-python
 tqdm
-tkinter
+# tkinter
 easygui
 fastapi
 requests
