@@ -191,7 +191,7 @@ class DataBaseOperation():
     def _send_match_request(self, image):
         match_result = None
         faces = DataBaseOperation._detect_face(image)
-        print(f"Number of faces: {faces}")
+        print(f"Number of faces: {faces}", flush=True)
         if faces == 0:
             return "No face found"
         _, image = cv2.imencode(".png", image)

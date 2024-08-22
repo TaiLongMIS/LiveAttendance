@@ -2,8 +2,8 @@ import cv2
 import os
 import copy
 import easygui
-from datetime import datetime
 from src.db_utils import DataBaseOperation
+import time
 
 
 def capture_continuous_frames(save_dir, cam_url, init_count=0):
@@ -146,33 +146,62 @@ def live_feed(cam_url):
         RTSP link of ip cam
     
     """
-    cap = cv2.VideoCapture(cam_url)
+
     db_operation = DataBaseOperation()
-    elapsed_time = 0.
-    count = 1
-    while cap.isOpened():
-        t1 = datetime.now()
-        ret, frame = cap.read()
-        if ret:
-            try:
-                frame = cv2.resize(frame, (640, 480))
-                # cv2.imshow("Live View", frame)
-            except:
-                break
+    
+    cap = cv2.VideoCapture(cam_url)
 
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                break
-        t2 = datetime.now()
-        elapsed_time += (t2 - t1).total_seconds()
-        if int(elapsed_time) == count:
-            # return_message = additional_func(frame, lock)
-            return_message = db_operation._send_match_request(frame)
-            print(f"return message: {return_message}")
+    print("*********** Video capturing commenced ***********", flush=True)
+
+    match_request_interval = 1
+    last_request_time = 0
+    
+    while True:
+        elapsed_time = 0.
+        count = 1
+
+        if cap.isOpened():      # If camera accessible and readable
+            ret, frame = cap.read()
+            if ret:
+                try:
+                    frame = cv2.resize(frame, (640, 480))
+                    # cv2.imshow("Live View", frame)
+                except:
+                    break
+
+                if cv2.waitKey(1) & 0xFF == ord('q'):
+                    break
+
+                current_time = time.time()
+                elapsed_time = current_time - last_request_time
+                if elapsed_time > match_request_interval:
+                    # return_message = additional_func(frame, lock)
+                    return_message = db_operation._send_match_request(frame)
+                    print(f"Return message: {return_message}", flush=True)
+                    
+
+                    # print(f"Elapsed {int(elapsed_time)} seconds")
+                    # print(return_message)
+                    last_request_time = time.time()
+            else:
+                print("Frame capture failed", flush=True)
+                print("Reconnecting...", flush=True)
+                
+                if cap:
+                    cap.release()
+
+                time.sleep(10)
+                cap = cv2.VideoCapture(cam_url)
+        else:   # If camera inaccessbile
+            print("Video capture failed", flush=True)
+            print("Reconnecting...", flush=True)
             
+            if cap:
+                cap.release()
 
-            # print(f"Elapsed {int(elapsed_time)} seconds")
-            # print(return_message)
-            count += 1
+            time.sleep(10)
+            cap = cv2.VideoCapture(cam_url)
+
     
     cv2.destroyAllWindows()
     cap.release()
